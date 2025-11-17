@@ -5,11 +5,19 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# Add repo root to Python path so we can import from services package
-sys.path.insert(0, '/app')
+# Add repo root to path if needed (for Railway/Docker deployment)
+repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
 
-from services.email_api.schemas import ContactRequest
-from services.email_api.sender import send_email
+try:
+    # Try importing from services package (when run from repo root)
+    from services.email_api.schemas import ContactRequest
+    from services.email_api.sender import send_email
+except ImportError:
+    # Fall back to direct imports (when run from service directory)
+    from schemas import ContactRequest
+    from sender import send_email
 
 load_dotenv()
 
