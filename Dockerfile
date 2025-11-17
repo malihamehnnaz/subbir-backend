@@ -15,6 +15,6 @@ COPY . .
 
 EXPOSE 8000
 
-# Run the FastAPI app directly from the services/email_api directory.
-# Note: uvicorn runs from WORKDIR (/app), so main:app resolves to ./main.py:app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the FastAPI app directly using the full module path.
+# Since WORKDIR is /app (repo root), we reference services.email_api.main:app
+CMD ["uvicorn", "services.email_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
