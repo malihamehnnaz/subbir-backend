@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN:-http://localhost:3000}
+    restart: always
+    command: uvicorn services.email_api.main:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+# Notes:
+# - This compose file is intended for production-like deployments where an external
+#   SMTP server (SendGrid, Mailgun, Gmail, etc.) is used. Set SMTP_HOST, SMTP_PORT,
+#   SMTP_USER and SMTP_PASSWORD in your environment or a secure env_file before running.
+# - Do NOT store secrets in the repository. Use your host or orchestration system's
+#   secret manager to provide credentials.

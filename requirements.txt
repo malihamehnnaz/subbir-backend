@@ -4,3 +4,4 @@ python-dotenv>=1.0.0
 pytest>=7.0
 requests
 tenacity>=8.2.0
+pydantic[email]

@@ -47,7 +47,12 @@ Docker + MailHog (recommended for local dev)
 
 ```powershell
 cd services/email_api
-docker compose up --build
+# Run app only (uses SMTP settings from services/email_api/.env or host env)
+docker compose up --build -d
+
+# For local development with MailHog (captures SMTP traffic), start with the `dev` profile
+# which brings up MailHog. Ensure your .env sets SMTP_HOST=mailhog and SMTP_PORT=1025 for local runs.
+docker compose --profile dev up --build -d
 ```
 
 2. MailHog web UI: http://localhost:8025 (captures emails sent by the app)
@@ -72,6 +77,25 @@ Before running the helper you may want to start MailHog (to capture messages) wi
 cd services/email_api
 docker compose up -d mailhog
 ```
+
+Production / external SMTP (Docker)
+
+If you want to run the app in a container and connect it to a real SMTP service (for example when testing a staging environment), use the provided production compose file which does not include MailHog:
+
+```powershell
+cd services/email_api
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+The production compose expects SMTP configuration to be supplied via `services/email_api/.env` or your host environment. Required values:
+
+- SMTP_HOST (e.g. smtp.gmail.com or smtp.sendgrid.net)
+- SMTP_PORT (e.g. 587)
+- SMTP_USER
+- SMTP_PASSWORD
+- EMAIL_TO (recipient; optional)
+
+Security note: never commit real credentials. Use your platform's secret manager or pass env vars at runtime.
 
 Production notes
 - Store SMTP/API keys in a secure store (AWS Secrets Manager, Azure Key Vault, GitHub Secrets, etc.) and never commit them to the repo.

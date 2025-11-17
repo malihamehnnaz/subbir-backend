@@ -4,8 +4,8 @@ import logging
 import os
 from dotenv import load_dotenv
 
-from .schemas import ContactRequest
-from .sender import send_email
+from schemas import ContactRequest
+from sender import send_email
 
 load_dotenv()
 
