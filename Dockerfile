@@ -15,5 +15,8 @@ COPY . .
 
 EXPOSE 8000
 
-# Use Python startup script to handle PORT environment variable
-CMD ["python", "run.py"]
+# Set default PORT if not provided
+ENV PORT=8000
+
+# Run uvicorn with proper port handling
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
