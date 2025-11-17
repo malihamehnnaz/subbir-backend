@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
@@ -14,13 +14,38 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Portfolio Email API")
 
+cors_env = os.environ.get("CORS_ALLOW_ORIGIN", "*") or "*"
+if isinstance(cors_env, str) and cors_env.strip() == "*":
+    allow_origins = ["*"]
+else:
+    allow_origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.environ.get("CORS_ALLOW_ORIGIN", "*")],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Log startup info so you can verify CORS settings in Railway logs
+logger.info(f"Portfolio Email API started. CORS_ALLOW_ORIGIN={cors_env!r} -> allow_origins={allow_origins}")
+
+@app.options("/send")
+async def _preflight_send(request: Request) -> Response:
+    origin = request.headers.get("origin")
+    if allow_origins == ["*"]:
+        acao = "*"
+    else:
+        acao = origin if origin in allow_origins else (allow_origins[0] if allow_origins else "*")
+
+    headers = {
+        "Access-Control-Allow-Origin": acao,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true",
+    }
+    return Response(status_code=204, headers=headers)
 
 
 @app.get("/")
