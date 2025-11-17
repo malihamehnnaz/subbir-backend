@@ -2,10 +2,14 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
+import sys
 from dotenv import load_dotenv
 
-from .schemas import ContactRequest
-from .sender import send_email
+# Add repo root to Python path so we can import from services package
+sys.path.insert(0, '/app')
+
+from services.email_api.schemas import ContactRequest
+from services.email_api.sender import send_email
 
 load_dotenv()
 
