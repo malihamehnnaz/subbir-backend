@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 import smtplib
 
-from services.email_api.main import app
+from main import app
 
 
 class DummySMTP:
