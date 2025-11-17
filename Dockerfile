@@ -15,5 +15,5 @@ COPY . .
 
 EXPOSE 8000
 
-# Run the FastAPI app directly using main:app since we're building from services/email_api directory
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use Python startup script to handle PORT environment variable
+CMD ["python", "run.py"]
