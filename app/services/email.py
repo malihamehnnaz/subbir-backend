@@ -5,6 +5,7 @@ Email service for handling SMTP operations and contact logging.
 import json
 import smtplib
 import requests
+import resend
 from datetime import datetime
 from email.message import EmailMessage
 from pathlib import Path
@@ -50,27 +51,31 @@ class EmailService:
                 server.send_message(msg)
 
     def _send_via_resend(self, name: str, sender_email: str, message_body: str) -> None:
-        """Send email via Resend API (https://resend.com/docs/api)."""
+        """Send email via Resend API using the Resend SDK."""
         api_key = self.settings.resend_api_key
         if not api_key:
             raise RuntimeError("RESEND_API_KEY is not configured")
 
-        url = "https://api.resend.com/emails"
-        payload = {
-            "from": self.settings.email_from,
-            "to": self.settings.email_to,
-            "subject": f"New contact form message from {name}",
-            "text": f"Name: {name}\nEmail: {sender_email}\n\nMessage:\n{message_body}\n",
-        }
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        # Set the API key for Resend
+        resend.api_key = api_key
 
-        resp = requests.post(url, json=payload, headers=headers, timeout=15)
+        # Prepare email body
+        body_text = f"Name: {name}\nEmail: {sender_email}\n\nMessage:\n{message_body}\n"
+
+        # Send email using Resend SDK
         try:
-            resp.raise_for_status()
+            response = resend.Emails.send(
+                {
+                    "from": self.settings.email_from,
+                    "to": self.settings.email_to,
+                    "subject": f"New contact form message from {name}",
+                    "text": body_text,
+                }
+            )
+            logger.info(f"Resend API response: {response}")
         except Exception as e:
-            logger.error(f"Resend API returned error: {resp.status_code} {resp.text}")
+            logger.error(f"Resend API error: {str(e)}")
             raise
-        logger.info(f"Resend API response: {resp.status_code}")
     
     def _save_contact_to_json(self, name: str, sender_email: str, message_body: str) -> None:
         """Save contact submission to JSON file for record keeping."""
