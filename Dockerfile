@@ -18,5 +18,8 @@ ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
-# Run with Uvicorn directly
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run with Uvicorn using the platform-provided PORT (fallback to 8000)
+# Many PaaS platforms (Railway, Heroku, etc.) provide the port to listen on
+# via the PORT environment variable. Use a shell command so the variable
+# is expanded at container start time.
+CMD ["sh", "-c", "python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
