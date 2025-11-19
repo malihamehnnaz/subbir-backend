@@ -1,7 +1,7 @@
-fastapi>=0.95
-uvicorn>=0.22
+fastapi>=0.115.0
+uvicorn[standard]>=0.24.0
 python-dotenv>=1.0.0
 pytest>=7.0
-requests
+requests>=2.31.0
 tenacity>=8.2.0
-pydantic[email]
+pydantic[email]>=2.5.0

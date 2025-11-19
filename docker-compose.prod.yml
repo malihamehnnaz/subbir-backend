@@ -8,14 +8,23 @@ services:
     env_file:
       - .env
     environment:
-      - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN:-http://localhost:3000}
+      - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN:-*}
     restart: always
-    command: uvicorn services.email_api.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./data:/app/data
+    command: [
+      "python", "-m", "uvicorn", "main:app",
+      "--host", "0.0.0.0",
+      "--port", "8000",
+      "--workers", "1",
+      "--log-level", "info"
+    ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      test: ["CMD-SHELL", "python -c 'import requests; requests.get(\"http://localhost:8000/\")' || exit 1"]
       interval: 30s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 # Notes:
 # - This compose file is intended for production-like deployments where an external

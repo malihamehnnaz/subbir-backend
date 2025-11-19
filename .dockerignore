@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment files  
+.env
+
+# Git and IDE
+.git/
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Data files (will be created at runtime)
+data/
+
+# Documentation
+README.md

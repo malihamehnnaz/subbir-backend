@@ -1,13 +1,4 @@
 services:
-  # MailHog is optional and only runs when the `dev` profile is enabled.
-  mailhog:
-    image: mailhog/mailhog
-    ports:
-      - "8025:8025" # web UI
-      - "1025:1025" # smtp
-    profiles:
-      - dev
-
   app:
     build:
       context: .
@@ -16,19 +7,14 @@ services:
       - "8000:8000"
     env_file:
       - .env
-    environment:
-      # default CORS origin can be overridden in .env
-      - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN:-http://localhost:3000}
     volumes:
-      - ./:/app:cached
-    # If you run with the dev profile (docker compose --profile dev up),
-    # MailHog will be available at hostname `mailhog` and you can set
-    # SMTP_HOST=mailhog and SMTP_PORT=1025 in your .env for local testing.
-    command: 
-      - python
-      - start.py
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - .:/app
+      - ./data:/app/data
+    command: [
+      "python", "-m", "uvicorn", "main:app",
+      "--host", "0.0.0.0",
+      "--port", "8000", 
+      "--reload"
+    ]
+    environment:
+      - EMAIL_DRY_RUN=true
