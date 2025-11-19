@@ -4,6 +4,7 @@ Email service for handling SMTP operations and contact logging.
 
 import json
 import smtplib
+import requests
 from datetime import datetime
 from email.message import EmailMessage
 from pathlib import Path
@@ -47,6 +48,29 @@ class EmailService:
                 server.starttls()
                 server.login(user, password)
                 server.send_message(msg)
+
+    def _send_via_resend(self, name: str, sender_email: str, message_body: str) -> None:
+        """Send email via Resend API (https://resend.com/docs/api)."""
+        api_key = self.settings.resend_api_key
+        if not api_key:
+            raise RuntimeError("RESEND_API_KEY is not configured")
+
+        url = "https://api.resend.com/emails"
+        payload = {
+            "from": self.settings.email_from,
+            "to": self.settings.email_to,
+            "subject": f"New contact form message from {name}",
+            "text": f"Name: {name}\nEmail: {sender_email}\n\nMessage:\n{message_body}\n",
+        }
+        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+        resp = requests.post(url, json=payload, headers=headers, timeout=15)
+        try:
+            resp.raise_for_status()
+        except Exception as e:
+            logger.error(f"Resend API returned error: {resp.status_code} {resp.text}")
+            raise
+        logger.info(f"Resend API response: {resp.status_code}")
     
     def _save_contact_to_json(self, name: str, sender_email: str, message_body: str) -> None:
         """Save contact submission to JSON file for record keeping."""
@@ -111,7 +135,16 @@ class EmailService:
             )
             return True
         
-        # Validate SMTP configuration
+        # If Resend is configured, prefer it (platforms often block SMTP)
+        if self.settings.resend_api_key:
+            try:
+                self._send_via_resend(name, sender_email, message_body)
+                logger.info(f"Email sent via Resend for contact from {name}")
+                return True
+            except Exception:
+                logger.exception("Resend send failed, falling back to SMTP")
+
+        # Validate SMTP configuration for fallback
         required_settings = [
             self.settings.smtp_host,
             self.settings.smtp_user,

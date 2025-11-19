@@ -31,6 +31,9 @@ class Settings:
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
         self.smtp_user = os.getenv("SMTP_USER", "")
         self.smtp_password = os.getenv("SMTP_PASSWORD", "")
+        # Resend (API email provider) Settings
+        # If provided, the application will use the Resend API instead of SMTP
+        self.resend_api_key = os.getenv("RESEND_API_KEY", "")
 
 
 # Global settings instance
