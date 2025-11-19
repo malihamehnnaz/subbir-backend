@@ -15,6 +15,10 @@ logger = get_logger(__name__)
 # Get settings
 settings = get_settings()
 
+# Log the platform-provided PORT (helpful for debugging deployments)
+import os
+logger.info(f"PORT env: {os.getenv('PORT')}")
+
 # Create FastAPI app
 app = FastAPI(
     title="Portfolio Email API",
