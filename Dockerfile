@@ -22,4 +22,9 @@ EXPOSE 8000
 # Many PaaS platforms (Railway, Heroku, etc.) provide the port to listen on
 # via the PORT environment variable. Use a shell command so the variable
 # is expanded at container start time.
-CMD ["sh", "-c", "python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Use an explicit startup script as ENTRYPOINT so the container always
+# launches Uvicorn with the platform-provided PORT. This is more robust
+# against platform overrides of the CMD.
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+ENTRYPOINT ["/app/start.sh"]
