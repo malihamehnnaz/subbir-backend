@@ -4,7 +4,6 @@ Email service for handling SMTP operations and contact logging.
 
 import json
 import smtplib
-import requests
 import resend
 from datetime import datetime
 from email.message import EmailMessage
@@ -13,7 +12,14 @@ from typing import Dict, Any
 
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from app.core import get_logger, get_settings
+from app.core import (
+    get_logger,
+    get_settings,
+    EmailConfigurationError,
+    EmailSendError,
+    ContactSaveError
+)
+from app.templates import get_html_template, get_text_template
 
 
 logger = get_logger(__name__)
@@ -51,31 +57,34 @@ class EmailService:
                 server.send_message(msg)
 
     def _send_via_resend(self, name: str, sender_email: str, message_body: str) -> None:
-        """Send email via Resend API using the Resend SDK."""
+        """Send email via Resend API using the Resend SDK with professional HTML template."""
         api_key = self.settings.resend_api_key
         if not api_key:
-            raise RuntimeError("RESEND_API_KEY is not configured")
+            raise EmailConfigurationError("RESEND_API_KEY is not configured")
 
         # Set the API key for Resend
         resend.api_key = api_key
 
-        # Prepare email body
-        body_text = f"Name: {name}\nEmail: {sender_email}\n\nMessage:\n{message_body}\n"
+        # Generate email templates
+        body_html = get_html_template(name, sender_email, message_body)
+        body_text = get_text_template(name, sender_email, message_body)
 
-        # Send email using Resend SDK
+        # Send email using Resend SDK with both HTML and plain text
         try:
             response = resend.Emails.send(
                 {
                     "from": self.settings.email_from,
                     "to": self.settings.email_to,
-                    "subject": f"New contact form message from {name}",
+                    "reply_to": sender_email,
+                    "subject": f"💼 Portfolio Contact: {name}",
+                    "html": body_html,
                     "text": body_text,
                 }
             )
             logger.info(f"Resend API response: {response}")
         except Exception as e:
             logger.error(f"Resend API error: {str(e)}")
-            raise
+            raise EmailSendError(f"Failed to send email via Resend: {str(e)}") from e
     
     def _save_contact_to_json(self, name: str, sender_email: str, message_body: str) -> None:
         """Save contact submission to JSON file for record keeping."""
@@ -113,6 +122,7 @@ class EmailService:
             logger.info(f"Contact saved to {json_file}")
         except Exception as e:
             logger.error(f"Failed to save contact to JSON: {e}")
+            raise ContactSaveError(f"Failed to save contact: {str(e)}") from e
     
     def send_contact_email(self, name: str, sender_email: str, message_body: str) -> bool:
         """
@@ -158,7 +168,7 @@ class EmailService:
         ]
         
         if not all(required_settings):
-            raise RuntimeError("Missing SMTP configuration. Check environment variables.")
+            raise EmailConfigurationError("Missing SMTP configuration. Check environment variables.")
         
         # Create email message
         msg = EmailMessage()

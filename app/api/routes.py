@@ -1,9 +1,10 @@
 """
-Simple API routes for the Portfolio Email API.
+API routes for the Portfolio Email API.
 """
 
-from fastapi import APIRouter, BackgroundTasks
-from app.core import get_logger, get_settings
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from app.core import get_logger
+from app.core.health import get_health_status, get_config_status
 from app.models import ContactRequest, ContactResponse
 from app.services import email_service
 
@@ -13,8 +14,17 @@ router = APIRouter()
 
 @router.get("/")
 async def health_check():
-    """Health check endpoint."""
-    return {"status": "ready", "service": "Portfolio Email API"}
+    """Health check endpoint with service information."""
+    return get_health_status()
+
+
+@router.get("/health")
+async def detailed_health():
+    """Detailed health check with configuration status."""
+    return {
+        **get_health_status(),
+        "config": get_config_status()
+    }
 
 
 @router.post("/send", status_code=202)
@@ -43,8 +53,8 @@ async def send_contact_email(
 def process_contact(name: str, email: str, message: str) -> None:
     """Process contact submission: save to JSON and send email."""
     try:
-        # This will save to JSON and optionally send email based on settings
         email_service.send_contact_email(name, email, message)
         logger.info(f"Contact processed successfully for {name}")
     except Exception as e:
         logger.exception(f"Failed to process contact from {name}: {e}")
+        # Don't raise - background task should not fail the response
