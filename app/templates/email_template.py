@@ -112,7 +112,7 @@ def get_html_template(name: str, sender_email: str, message_body: str) -> str:
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>📬 New Contact Form Submission</h1>
+            <h1>📬 Hi , I am Maliha Mehnaz. I will get back to you.</h1>
             <p class="timestamp">Received on {timestamp}</p>
         </div>
         

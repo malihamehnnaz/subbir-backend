@@ -3,6 +3,11 @@ FastAPI application for portfolio contact forms.
 Production-ready with modular architecture.
 """
 
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
