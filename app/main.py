@@ -39,8 +39,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-     "https://www.buildwithsubbir.pro",
-        "https://buildwithsubbir.pro",
 )
 
 # Include routes
